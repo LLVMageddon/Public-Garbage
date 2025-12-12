@@ -54,6 +54,11 @@ dkms.conf
 # debug information files
 *.dwo
 
+# log files
+*.log
+
 # My dirty folders
 garbage/
-
+bin/
+build/
+.vscode/
