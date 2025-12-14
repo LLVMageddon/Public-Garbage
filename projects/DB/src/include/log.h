@@ -1,3 +1,5 @@
+#include <stdarg.h>
+
 #ifndef LOG_H
 #define LOG_H
 
@@ -9,26 +11,26 @@ I'll reinvent the wheel, I always wanted to create a logging library for C.
 REFERENCE: LOG4J
 
 Logging Levels:
-    1. FATAL
-    2. ERROR
-    3. WARN
-    4. INFO
-    5. DEBUG
-    6. TRACE
-    7. ALL
-    8. OFF
+1. FATAL
+2. ERROR
+3. WARN
+4. INFO
+5. DEBUG
+6. TRACE
+7. ALL
+8. OFF
 
 Logging Functions
-    1. logger.error(String) // I'll use this type of function call, I'll try to use macros for each logging level. e.g: LOG_ERROR(char[])
-    2. logger.error(String, value) // IGNORE THIS
-    3. logger.error(String, exception) // IGNORE THIS
-    ...
+1. logger.error(String) // I'll use this type of function call, I'll try to use macros for each logging level. e.g: LOG_ERROR(char[])
+2. logger.error(String, value) // IGNORE THIS
+3. logger.error(String, exception) // IGNORE THIS
+...
 
 Other Logging Functions
-    1. A init function
-    2. A shutdown function
-    3. A way to set logging level
-    3. The actual log function (which would be mapped ot a macro)
+1. A init function
+2. A shutdown function
+3. A way to set logging level
+3. The actual log function (which would be mapped ot a macro)
 
 */   
 typedef enum{
