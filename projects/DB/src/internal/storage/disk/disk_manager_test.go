@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"dbp/src/internal/storage"
 	"path/filepath"
 	"testing"
 )
@@ -32,7 +33,13 @@ func TestAllocateAndReadWritePage(t *testing.T){
 	data := make([]byte, testPageSize)
 	copy(data, []byte("FRPS"))
 
+	page := storage.NewPage(67)
+	copy(page.Data, data)
+
+	// serialized_page, err := page.Serialize()
+
 	if err := dm.WritePage(pid, data); err != nil{
+		// if err := dm.WritePage(pid, serialized_page); err != nil{
 		t.Fatalf("Write Page error: %v", err)
 	}
 
@@ -41,9 +48,18 @@ func TestAllocateAndReadWritePage(t *testing.T){
 		t.Fatalf("Read Page error: %v", err)
 	}
 
+
+	// deserialize_page, err := storage.Deserialize(read) 
+
+
+	// if string(deserialize_page.Data[:4]) != "FRPS"{
+	// 	t.Fatalf("data mismatch")
+	// }
+
 	if string(read[:4]) != "FRPS"{
 		t.Fatalf("data mismatch")
 	}
+
 }
 
 
