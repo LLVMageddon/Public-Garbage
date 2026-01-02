@@ -1,6 +1,6 @@
 # Project settings
 PROJECT_NAME := dbp
-CMD_DIR := ./src/cmd/dbms/*
+CMD_DIR := ./src/cmd/dbms/
 BIN_DIR := ./bin
 BIN := $(BIN_DIR)/$(PROJECT_NAME)
 
