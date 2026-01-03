@@ -1,0 +1,69 @@
+Page Layout[1]
+    One file per table divided into 8kb blocks (pages)
+
+
+Page
+    Types:
+        meta
+        root
+        internal tree
+        leaf
+
+    Components:
+        Page Header     -> Info about the page
+            contains 24 Bytes 
+                eg: Checksum (zero the checksum, then calculate the checksum over entire page then replace with real[2])
+                    Offsets(free & special)
+                    Info WAL handling
+                    Layout version number
+                    etc
+
+        ItemIds         -> Array of pointers to item
+            contains 4 bytes    
+                eg: offset to and length of item
+
+        Free Space      -> The unused space
+
+        Items           -> Actual data
+            consists:
+                Item Header 23 bytes
+                    containing: 
+                        trans IDS
+                        Tuple ID
+                        Offset to data
+                Data
+                    contains:
+                        Data if not null
+
+        Special Space   -> Padding
+            The Special Space is only used by index files for their individual purpose.
+                eg: Page Number
+                    Page Type
+                      
+
+
+
+        Page Magic number[2]
+            At the beginning of the every page 0xDBDBDBDB
+
+    Deterministic binary layout[2]
+        Explicit control over byte order and offsets. little-endian(LSB)
+
+    Corruption Detection[1]
+        CRC checking, zero out checksum went calculating it then replacing the zeroed checksum with calcualted CRC.
+
+    Forward-Compatible page Header[3][Chapter 3]
+        Database systems constantly evolve, and developers work to add features,
+        and to fix bugs and performance issues. As a result of that, the binary file
+        format can change. Most of the time, any storage engine version has to
+        support more than one serialization format (e.g., current and one or more
+        legacy formats for backward compatibility). To support that, we have to be
+        able to find out which version of the file we’re up against.
+
+    Serialize & Deserialize[3][Chapter 3]
+        When storing data to disk, we can only store byte squences. In order to read and write we need to serialize and deserialize.
+
+References
+    [1] PosgreSql - Page Layout
+    [2] SQLite - Database File Format
+    [3] Database Internals - Alex Petrov
