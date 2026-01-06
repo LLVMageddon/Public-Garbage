@@ -22,24 +22,28 @@ var (
 )
 
 type PageHeader struct {
-	Magic    uint32 // 04 bytes	//	Magic Number at begginning of page header
-	Version  uint16 // 02 bytes //	Version for forward and backwards compatiablity
-	Flags    uint16 // 02 bytes // 	Page Tyep flag
-	PageID   uint64 // 08 bytes // 	Page Id
-	DataSize uint32 // 04 bytes //	Bytes Used
-	Checksum uint32 // 04 bytes //	CRC error detection
-	Reserved uint64 // 08 bytes //	Special Space
+	Magic     uint32 // 04 bytes	//	Magic Number at begginning of page header
+	Version   uint16 // 02 bytes //	Version for forward and backwards compatiablity
+	Flags     uint16 // 02 bytes // 	Page Tyep flag
+	PageID    uint64 // 08 bytes // 	Page Id
+	FreeStart uint16 // 02 bytes // Start of free space
+	FreeEnd   uint16 // 02 bytes // End of free space
+	SlotCount uint16 // 02 bytes
+	Checksum  uint32 // 04 bytes //	CRC error detection
+	Reserved  uint32 // 04 bytes //	Special Space
 }
 
 const (
-	OffsetMagic    = 0
-	OffsetVersion  = 4
-	OffsetFlags    = 6
-	OffsetPageID   = 8
-	OffsetDataSize = 16
-	OffsetChecksum = 20
-	OffsetReserved = 24
-	OffsetData     = 32
+	OffsetMagic     = 0
+	OffsetVersion   = 4
+	OffsetFlags     = 6
+	OffsetPageID    = 8
+	OffsetFreeStart = 16
+	OffsetFreeEnd   = 18
+	OffsetSlotCount = 20
+	OffsetChecksum  = 22
+	OffsetReserved  = 26
+	OffsetData      = 32
 )
 
 type Page struct {
@@ -66,9 +70,11 @@ func serializeHelper(page *Page, checksum uint32) ([]byte, error) {
 	binary.LittleEndian.PutUint16(buf[OffsetVersion:], page.Header.Version)
 	binary.LittleEndian.PutUint16(buf[OffsetFlags:], page.Header.Flags)
 	binary.LittleEndian.PutUint64(buf[OffsetPageID:], page.Header.PageID)
-	binary.LittleEndian.PutUint32(buf[OffsetDataSize:], page.Header.DataSize)
+	binary.LittleEndian.PutUint16(buf[OffsetFreeStart:], page.Header.FreeStart)
+	binary.LittleEndian.PutUint16(buf[OffsetFreeEnd:], page.Header.FreeEnd)
+	binary.LittleEndian.PutUint16(buf[OffsetSlotCount:], page.Header.SlotCount)
 	binary.LittleEndian.PutUint32(buf[OffsetChecksum:], checksum)
-	binary.LittleEndian.PutUint64(buf[OffsetReserved:], page.Header.Reserved)
+	binary.LittleEndian.PutUint32(buf[OffsetReserved:], page.Header.Reserved)
 
 	copy(buf[OffsetData:], page.Data)
 
@@ -104,13 +110,15 @@ func Deserialize(raw []byte) (*Page, error) {
 	}
 
 	header := PageHeader{
-		Magic:    magic,
-		Version:  binary.LittleEndian.Uint16(raw[OffsetVersion:]),
-		Flags:    binary.LittleEndian.Uint16(raw[OffsetFlags:]),
-		PageID:   binary.LittleEndian.Uint64(raw[OffsetPageID:]),
-		DataSize: binary.LittleEndian.Uint32(raw[OffsetDataSize:]),
-		Checksum: checksum,
-		Reserved: binary.LittleEndian.Uint64(raw[OffsetReserved:]),
+		Magic:     magic,
+		Version:   binary.LittleEndian.Uint16(raw[OffsetVersion:]),
+		Flags:     binary.LittleEndian.Uint16(raw[OffsetFlags:]),
+		PageID:    binary.LittleEndian.Uint64(raw[OffsetPageID:]),
+		FreeStart: binary.LittleEndian.Uint16(raw[OffsetFreeStart:]),
+		FreeEnd:   binary.LittleEndian.Uint16(raw[OffsetFreeEnd:]),
+		SlotCount: binary.LittleEndian.Uint16(raw[OffsetSlotCount:]),
+		Checksum:  checksum,
+		Reserved:  binary.LittleEndian.Uint32(raw[OffsetReserved:]),
 	}
 
 	data := make([]byte, PageSize-PageHeaderSize)
