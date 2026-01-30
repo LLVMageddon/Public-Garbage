@@ -1,5 +1,6 @@
 package storage
 
+// TODO : Compact free space
 import (
 	"encoding/binary"
 	"errors"
@@ -13,6 +14,8 @@ type Slot struct {
 const (
 	OffsetOffset = 2
 	OffsetLenght = 2
+	SlotSize     = OffsetOffset + OffsetLenght
+	// DataOffset =
 )
 
 var (
@@ -23,8 +26,29 @@ var (
 
 type SlottedPage struct {
 	Header PageHeader
-	Slots  []Slot
-	Data   []byte
+	// Slots  []Slot //FYI this is a waste of space slots can be found based on slotsize
+	Data []byte
+}
+
+func (p *SlottedPage) numSlots() int {
+	// return int(p.lower) / SlotSize
+	// return len(p.Slots)
+	return int(p.Header.SlotCount)
+}
+
+func (p *SlottedPage) readSlot(slotID uint16) Slot {
+	pos := int(slotID) * SlotSize
+
+	return Slot{
+		Offset: binary.LittleEndian.Uint16(p.Data[OffsetData+pos:]),
+		Length: binary.LittleEndian.Uint16(p.Data[OffsetData+pos+2:]),
+	}
+}
+
+func (p *SlottedPage) writeSlot(slotID uint16, s Slot) {
+	pos := int(slotID) * SlotSize
+	binary.LittleEndian.PutUint16(p.Data[OffsetData+pos:], s.Offset)
+	binary.LittleEndian.PutUint16(p.Data[OffsetData+pos+2:], s.Length)
 }
 
 func NewSlottedPage(pageID uint64) *SlottedPage {
@@ -44,6 +68,25 @@ func NewSlottedPage(pageID uint64) *SlottedPage {
 func (p *SlottedPage) Insert(record []byte) (uint16, error) {
 	recordSize := uint16(len(record))
 	slotSize := uint16(binary.Size(Slot{}))
+	prevSlot := Slot{
+		Offset: PageSize,
+		Length: 0,
+	}
+
+	for id := 0; id < p.numSlots(); id++ {
+		s := p.readSlot(uint16(id))
+		if prevSlot.Offset-s.Offset >= recordSize && s.Length == 0 {
+			copy(p.Data[s.Offset:], record)
+			slot := Slot{
+				Offset: s.Offset,
+				// Length: s.Length,
+				Length: recordSize,
+			}
+			p.writeSlot(uint16(id), slot)
+			return uint16(id), nil
+		}
+		prevSlot = s
+	}
 
 	available := p.Header.FreeEnd - p.Header.FreeStart
 	if available < recordSize+slotSize {
